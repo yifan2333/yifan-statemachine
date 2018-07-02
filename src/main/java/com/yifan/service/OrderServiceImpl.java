@@ -4,8 +4,7 @@ import com.yifan.entity.Order;
 import com.yifan.enums.OrderEvents;
 import com.yifan.enums.OrderStates;
 import com.yifan.repository.OrderRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
@@ -27,10 +26,9 @@ import java.util.Optional;
  * @author: wuyifan
  * @date: 2null18年null7月null1日 15:35
  */
+@Slf4j
 @Service("orderService")
 public class OrderServiceImpl implements OrderService {
-
-    private Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
 
     private static final String ORDER_ID_MESSAGE_HEADER = "orderId";
 
@@ -94,7 +92,7 @@ public class OrderServiceImpl implements OrderService {
 
         Optional<Order> orderOptional = orderRepository.findById(id);
 
-        logger.info("创建状态机时，订单状态为：{}", orderOptional.orElse(new Order()));
+        log.info("创建状态机时，订单状态为：{}", orderOptional.orElse(new Order()));
 
         String orderIdKey = Long.toString(orderOptional.orElse(new Order()).getId());
 

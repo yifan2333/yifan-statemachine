@@ -2,8 +2,7 @@ package com.yifan.config;
 
 import com.yifan.enums.OrderEvents;
 import com.yifan.enums.OrderStates;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.StateMachineConfigurerAdapter;
@@ -21,11 +20,10 @@ import java.util.EnumSet;
  * @author: wuyifan
  * @date: 2018年07月01日 15:37
  */
+@Slf4j
 @EnableStateMachineFactory
 @Configuration
 public class SimpleEnumStateMachineConfiguration extends StateMachineConfigurerAdapter<OrderStates, OrderEvents> {
-
-    private Logger logger = LoggerFactory.getLogger(SimpleEnumStateMachineConfiguration.class);
 
     @Override
     public void configure(StateMachineTransitionConfigurer<OrderStates, OrderEvents> transitions) throws Exception {
@@ -56,7 +54,7 @@ public class SimpleEnumStateMachineConfiguration extends StateMachineConfigurerA
         StateMachineListenerAdapter<OrderStates, OrderEvents> listenerAdapter = new StateMachineListenerAdapter<OrderStates, OrderEvents>(){
             @Override
             public void stateChanged(State<OrderStates, OrderEvents> from, State<OrderStates, OrderEvents> to) {
-                logger.info("状态从 {} 改变为 {}", from + "", to + "");
+                log.info("状态从 {} 改变为 {}", from + "", to + "");
             }
         };
 
