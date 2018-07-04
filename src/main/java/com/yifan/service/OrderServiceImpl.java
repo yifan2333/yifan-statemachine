@@ -98,8 +98,7 @@ public class OrderServiceImpl implements OrderService {
 
         StateMachine<OrderStates, OrderEvents> sm = factory.getStateMachine(orderIdKey);
 
-        if (orderOptional.isPresent()){
-            Order order = orderOptional.get();
+        orderOptional.ifPresent(order -> {
             sm.stop();
             sm.getStateMachineAccessor().doWithAllRegions(sma -> {
                 sma.addStateMachineInterceptor(new StateMachineInterceptorAdapter<OrderStates, OrderEvents>() {
@@ -108,18 +107,17 @@ public class OrderServiceImpl implements OrderService {
                         Optional.ofNullable(message).ifPresent(msg -> Optional.ofNullable(Long.class.cast(msg.getHeaders().getOrDefault("orderId", -1L)))
                                 .ifPresent(orderId -> {
                                     Optional<Order> orderOptional = orderRepository.findById(orderId);
-                                    if (orderOptional.isPresent()) {
-                                        Order order1 = orderOptional.get();
-                                        order1.setState(state.getId().name());
-                                        orderRepository.save(order1);
-                                    }
+                                    orderOptional.ifPresent(order -> {
+                                        order.setState(state.getId().name());
+                                        orderRepository.save(order);
+                                    });
                                 }));
                     }
                 });
                 sma.resetStateMachine(new DefaultStateMachineContext<>(order.getStatusEnum(), null, null, null));
             });
             sm.start();
-        }
+        });
         return sm;
     }
 }
