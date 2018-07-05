@@ -106,11 +106,8 @@ public class OrderServiceImpl implements OrderService {
                     public void preStateChange(State<OrderStates, OrderEvents> state, Message<OrderEvents> message, Transition<OrderStates, OrderEvents> transition, StateMachine<OrderStates, OrderEvents> stateMachine) {
                         Optional.ofNullable(message).ifPresent(msg -> Optional.ofNullable(Long.class.cast(msg.getHeaders().getOrDefault("orderId", -1L)))
                                 .ifPresent(orderId -> {
-                                    Optional<Order> orderOptional = orderRepository.findById(orderId);
-                                    orderOptional.ifPresent(order -> {
-                                        order.setState(state.getId().name());
-                                        orderRepository.save(order);
-                                    });
+                                    order.setState(state.getId().name());
+                                    orderRepository.save(order);
                                 }));
                     }
                 });
