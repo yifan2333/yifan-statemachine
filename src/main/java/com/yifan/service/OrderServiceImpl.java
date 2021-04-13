@@ -91,30 +91,33 @@ public class OrderServiceImpl implements OrderService {
     private StateMachine<OrderStates,OrderEvents> build(Long id) {
 
         Optional<Order> orderOptional = orderRepository.findById(id);
+        if (orderOptional.isPresent()) {
+            Order order = orderOptional.get();
+            log.info("创建状态机时，订单状态为：{}", order);
 
-        log.info("创建状态机时，订单状态为：{}", orderOptional.orElse(new Order()));
+            String orderIdKey = Long.toString(order.getId());
 
-        String orderIdKey = Long.toString(orderOptional.orElse(new Order()).getId());
+            StateMachine<OrderStates, OrderEvents> sm = factory.getStateMachine(orderIdKey);
 
-        StateMachine<OrderStates, OrderEvents> sm = factory.getStateMachine(orderIdKey);
-
-        orderOptional.ifPresent(order -> {
             sm.stop();
-            sm.getStateMachineAccessor().doWithAllRegions(sma -> {
-                sma.addStateMachineInterceptor(new StateMachineInterceptorAdapter<OrderStates, OrderEvents>() {
-                    @Override
-                    public void preStateChange(State<OrderStates, OrderEvents> state, Message<OrderEvents> message, Transition<OrderStates, OrderEvents> transition, StateMachine<OrderStates, OrderEvents> stateMachine) {
-                        Optional.ofNullable(message).ifPresent(msg -> Optional.ofNullable(Long.class.cast(msg.getHeaders().getOrDefault("orderId", -1L)))
-                                .ifPresent(orderId -> {
-                                    order.setState(state.getId().name());
-                                    orderRepository.save(order);
-                                }));
-                    }
-                });
-                sma.resetStateMachine(new DefaultStateMachineContext<>(order.getStatusEnum(), null, null, null));
-            });
+            sm.getStateMachineAccessor()
+                    .doWithAllRegions(sma -> {
+                        sma.addStateMachineInterceptor(new StateMachineInterceptorAdapter<OrderStates, OrderEvents>() {
+                            @Override
+                            public void preStateChange(State<OrderStates, OrderEvents> state, Message<OrderEvents> message, Transition<OrderStates, OrderEvents> transition, StateMachine<OrderStates, OrderEvents> stateMachine) {
+                                Optional.ofNullable(message)
+                                        .flatMap(msg -> Optional.ofNullable((Long) msg.getHeaders().getOrDefault("orderId", -1L)))
+                                        .ifPresent(orderId -> {
+                                            order.setState(state.getId().name());
+                                            orderRepository.save(order);
+                                        });
+                            }
+                        });
+                        sma.resetStateMachine(new DefaultStateMachineContext<>(order.getStatusEnum(), null, null, null));
+                    });
             sm.start();
-        });
-        return sm;
+            return sm;
+        }
+        throw new RuntimeException("order id " + id + "not found");
     }
 }
